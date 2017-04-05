@@ -134,7 +134,7 @@ func simplemain() {
 	u := &url.URL{
 		Scheme:   "PlatformlaRelease",
 		User:     url.UserPassword("usrbgjobs", "usrdev2"),
-		Host:     fmt.Sprintf("%s:%d", "192.168.2.194", 1433),
+		Host:     fmt.Sprintf("%s:%d", "", 1433),
 		Path:     "VMSQL2005QAM", // if connecting to an instance instead of a port
 		RawQuery: query.Encode(),
 	}
