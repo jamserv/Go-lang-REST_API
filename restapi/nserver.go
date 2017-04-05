@@ -143,7 +143,7 @@ func simplemain() {
 
 	println(connectionString)
 
-	db, err := sql.Open("sqlserver", connectionString)
+	db, err := sql.Open("mssql", connectionString)
 
 	if err != nil {
 		fmt.Println("Cannot connect: ", err.Error())
