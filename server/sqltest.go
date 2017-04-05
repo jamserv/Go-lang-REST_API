@@ -18,9 +18,9 @@ func main() {
 	// Flags
 	ptrVersion := flag.Bool("version", false, "Display program version")
 	//ptrDeleteIt := flag.Bool("deletedb", false, "Delete the database")
-	ptrServer := flag.String("server", "192.168.2.194", "Server to connect to")
-	ptrUser := flag.String("username", "usrbgjobs", "Username for authenticating to database; if you use a backslash, it must be escaped or in quotes")
-	ptrPass := flag.String("password", "usrdev2", "Password for database connection")
+	ptrServer := flag.String("server", "", "Server to connect to")
+	ptrUser := flag.String("username", "", "Username for authenticating to database; if you use a backslash, it must be escaped or in quotes")
+	ptrPass := flag.String("password", "", "Password for database connection")
 	//ptrDBName := flag.String("dbname", "PlatformlaRelease", "Database name")
 
 	flag.Parse()

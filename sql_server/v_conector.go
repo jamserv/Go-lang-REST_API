@@ -12,7 +12,7 @@ import (
 var debug = flag.Bool("debug", false, "enable debugging")
 var password = flag.String("password", "usrdev2", "usrdev2")
 var port *int = flag.Int("port", 1433, "the database port")
-var server = flag.String("server", "192.168.2.194", "192.168.2.194")
+var server = flag.String("server", "", "")
 var user = flag.String("user", "usrbgjobs", "usrbgjobs")
 var dbname = flag.String("dbname", "PlatformlaRelease\\VMSQL2005QAM", "PlatformlaRelease")
 //var connStr = fmt.Sprintf("server=%s;Initial Catalog=MySchema;userid=%s;password=%s;port=%d", *server, *user, *password, *port)
@@ -32,7 +32,7 @@ func simplemain() {
 		fmt.Printf(" user:%s\n", *user)
 	}
 
-	connString := fmt.Sprintf("server=%s;Initial Catalog=PlatformlaRelease\\VMSQL2005QAM;user id=%s;password=%s;port=%d", *server, *user, *password, *port)
+	connString := fmt.Sprintf("server=%s;Initial Catalog=\\VMSQL2005QAM;user id=%s;password=%s;port=%d", *server, *user, *password, *port)
 	if *debug {
 		fmt.Printf(" connString:%s\n", connString)
 	}
