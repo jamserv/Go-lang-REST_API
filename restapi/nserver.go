@@ -1,20 +1,19 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
-	"flag"
 	"log"
 	"net/http"
-	"net/url"
 	"strconv"
 
 	"fmt"
 	"os"
 
-	_ "github.com/denisenkom/go-mssqldb"
-
 	"github.com/gorilla/mux"
+	"flag"
+	"database/sql"
+	_"github.com/denisenkom/go-mssqldb"
+	"github.com/BurntSushi/toml"
 )
 
 type Person struct {
@@ -77,21 +76,17 @@ func DeletePersonEndpoint(w http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(w).Encode(people)
 }
 
-var gpush = make(map[string]Client)
+var usuPush = make(map[string] Users)
 
-func getAllComits(w http.ResponseWriter, r *http.Request) {
-	/*commits := map[string]int{
-		"rsc": 3711,
-		"r":   2138,
-		"gri": 1908,
-		"adg": 912,
-	}*/
-	/*gpush[1] = Client{
-		9984,
-		"janez",
-	}*/
+func insertRecords(db *sql.DB, user *Users)  {
+	stms, err := db.Prepare("INSERT INTO dbo.Users (name, address) VALUES " +
+		"('" + user.NAME + "', '" + user.ADDRESS +"')")
+	_, err = stms.Exec()
+	CheckError(err)
+}
 
-	js, err := json.Marshal(gpush)
+func getAllUsers(w http.ResponseWriter, r *http.Request) {
+	js, err := json.Marshal(usuPush)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -101,102 +96,133 @@ func getAllComits(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 
-/*
-type Producto struct {
-	Id      int       "json:'id,omitempty'"
-	Name    string    "json:'name, omitempty'"
-	ProvInf Proveedor "json:'provinf'"
-}*/
-
-type Client struct {
-	Id        int        "json:'id,omitempty'"
-	Name      string     "json:'name,omitempty'"
-	Proveedor *Proveedor "json:'proveedor,omitempty'"
-}
-
-type Proveedor struct {
-	IdProv   int    "json:'idprov,omitempty'"
-	NameProv string "json:'nameprov,omitempty'"
-}
-
-var debug = flag.Bool("debug", false, "enable debugging")
-var password = flag.String("password", "usrdev2", "the database password")
-var port *int = flag.Int("port", 1433, "the database port")
-var server = flag.String("server", "192.168.2.194", "the database server")
-var user = flag.String("user", "usrbgjobs", "the database user")
-
-//PlatformlaRelease;instance=VMSQL2005QAM
-func simplemain() {
-
-	query := url.Values{}
-	//query.Add("connection timeout", fmt.Sprintf("%d", 3000))
-
-	u := &url.URL{
-		Scheme:   "PlatformlaRelease",
-		User:     url.UserPassword("usrbgjobs", "usrdev2"),
-		Host:     fmt.Sprintf("%s:%d", "", 1433),
-		Path:     "VMSQL2005QAM", // if connecting to an instance instead of a port
-		RawQuery: query.Encode(),
-	}
-
-	connectionString := u.String()
-
-	println(connectionString)
-
-	db, err := sql.Open("mssql", connectionString)
-
-	if err != nil {
-		fmt.Println("Cannot connect: ", err.Error())
-		return
-	}
-	err = db.Ping()
-	if err != nil {
-		fmt.Println("Cannot connect: ", err.Error())
-		return
-	}
-	// or
-	//db, err := sql.Open("mssql", connectionString)
-	/*var (
-		userid   = flag.String("U", "usrbgjobs", "usrbgjobs")
-		password = flag.String("P", "usrdev2", "usrdev2")
-		server   = flag.String("S", "192.168.2.194", "192.168.2.194[\\VMSQL2005QAM]")
-		database = flag.String("d", "PlatformlaRelease", "PlatformlaRelease")
-	)*/
-	//flag.Parse()
-	//dsn := "server=192.168.2.194;user id=usrbgjobs;password=usrdev2;database=PlatformlaRelease;instance=VMSQL2005QAM"
-	/*dsn := "sqlserver://usrbgjobs:usrdev2@192.168.2.194:1433?database=PlatformlaRelease&instance=VMSQL2005QAM"
-
-	db, err := sql.Open("sqlserver", dsn)
-	if err != nil {
-		fmt.Println("Cannot connect: ", err.Error())
-		return
-	}
-	err = db.Ping()
-	if err != nil {
-		fmt.Println("Cannot connect: ", err.Error())
-		return
-	}*/
+type Users struct {
+	UUID 		string	"json:'uuid,omitempty'"
+	NAME		string	"json:'name,omitempty'"
+	ADDRESS 	string	"json:'address,omitempty'"
+	AGE		int64	"json:'age,omitempty'"
+	CREATEDT	string "json:'createDt,omitempty'"
 }
 
 func main() {
-	router := mux.NewRouter()
 	/*
-		people["1"] = Person{ID: "1", Firstname: "Nic", Lastname: "Raboy", Address: &Address{City: "Dublin", State: "CA"}}
-		people["2"] = Person{ID: "2", Firstname: "Maria", Lastname: "Raboy"}
-	*/
-
-	simplemain()
-
-	for index := 0; index < 1000; index++ {
-		gpush["inde_"+strconv.Itoa(index)] = Client{Id: index, Name: "janez___" + strconv.Itoa(index), Proveedor: &Proveedor{IdProv: index, NameProv: "prov_ca"}}
+	router := mux.NewRouter()
+	db, error := getConectionsDB()
+	if error != nil {
+		log.Panic(error)
 	}
+
+	//bulkAddUsr(db)
+
+	buildQuery(db)
+	*/
 
 	/*	router.HandleFunc("/people", GetPeopleEndpoint).Methods("GET")
 		router.HandleFunc("/people/{id}", GetPersonEndpoint).Methods("GET")
 		router.HandleFunc("/people/{id}", CreatePersonEndpoint).Methods("POST")
 		router.HandleFunc("/people/{id}", DeletePersonEndpoint).Methods("DELETE")
 	*/
-	router.HandleFunc("/commits", getAllComits).Methods("GET")
+
+	config := ReadConfig()
+	log.Println("db_is::"+config.database)
+
+	/*
+	router.HandleFunc("/users", getAllUsers).Methods("GET")
 
 	log.Fatal(http.ListenAndServe(":9984", router))
+
+	fmt.Println("listenig on... http://localhost:9984/")
+	*/
+}
+
+func ReadConfig() Configuration  {
+	var configfile = "properties.toml"
+	_, err := os.Stat(configfile)
+	if err != nil {
+		log.Fatal("Config file is missing: ", configfile)
+	}
+
+	var config Configuration
+	if _, err := toml.DecodeFile(configfile, &config); err != nil {
+		log.Fatal(err)
+	}
+	//log.Print(config.Index)
+	return config
+}
+
+func getConectionsDB()(*sql.DB, error) {
+	config := ReadConfig()
+	println("host___is::"+ config.host)
+
+	var debug = flag.Bool("debug", true, "enable debugging")
+	var password = flag.String("password", "admin9984", "the database password")
+	var port *int = flag.Int("port", 1433, "the database port")
+	var server = flag.String("server", "localhost", "the database server")
+	var user = flag.String("user", "sa", "the database user")
+	var database = flag.String("database", "janezdev", "the database name")
+	flag.Parse() // parse the command line args
+
+	if *debug {
+		fmt.Printf(" password:%s\n", *password)
+		fmt.Printf(" port:%d\n", *port)
+		fmt.Printf(" server:%s\n", *server)
+		fmt.Printf(" user:%s\n", *user)
+		fmt.Printf(" database:%s\n", *database)
+	}
+	connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;database=%s", *server, *user, *password, *port, *database)
+	if *debug {
+		fmt.Printf("connString:%s\n", connString)
+	}
+	db, err := sql.Open("sqlserver", connString)
+	if err != nil {
+		log.Fatal("Open connection failed:", err.Error())
+	}
+	return db, err
+}
+
+func bulkAddUsr(db *sql.DB)  {
+	for index := 0; index < 100000; index++ {
+		insertRecords(db, &Users{
+			NAME: "name__" + strconv.Itoa(index),
+			ADDRESS: "Address__" + strconv.Itoa(index),
+			AGE: 45,
+		})
+	}
+}
+
+type Configuration struct {
+	host		string
+	port		string
+	username	string
+	password	string
+	database	string
+}
+
+func buildQuery(db *sql.DB)  {
+	rows, err := db.Query("select cast(uuid as char(36)), name, address, createDt from dbo.Users")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	index := 0
+	for rows.Next() {
+		index++
+		var r Users
+		err = rows.Scan(&r.UUID, &r.NAME, &r.ADDRESS, &r.CREATEDT)
+		if err != nil {
+			log.Fatalf("Scan: %v", err)
+		}
+		usuPush["index__" + strconv.Itoa(index)] = r
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func CheckError(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

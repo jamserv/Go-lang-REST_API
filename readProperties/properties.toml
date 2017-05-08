@@ -1,0 +1,6 @@
+[database]
+host = "localhost"
+port = "1433"
+username = "sa"
+password = "admin9984"
+database = "janezdev"
